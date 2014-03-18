@@ -4,23 +4,57 @@
 
 set -e
 
+BUILD_DIR=$1
+CACHE_DIR=$2
+
+mkdir -p $CACHE_DIR
+
+MEMCACHIER_ROOT_CA=https://www.memcachier.com/MemCachierRootCA.pem
+
 STUNNEL_URL="https://s3.amazonaws.com/memcachier-files/stunnel-5.tgz"
-STUNNEL_SHA256="af637060bfe7ff82d423b7b2a1e8583094fb4d2d312036f58df1565df93a9c46  stunnel-5.tgz"
 STUNNEL_DIR=$BUILD_DIR/vendor/stunnel
 STUNNEL_TGZ=$CACHE_DIR/stunnel-5.tgz
 
 if [ ! -f $STUNNEL_TGZ ]; then
   echo "-----> Fetching stunnel"
   curl $STUNNEL_URL -s -o $CACHE_DIR/stunnel-5.tgz
-done
-
-echo "-----> Verifying stunnel package sha256"
-echo $STUNNEL_SHA256 > $CACHE_DIR/stunnel-5.tgz.sha256sum
-sha256sum -c $CACHE_DIR/stunnel-5.tgz.sha256sum
+fi
 
 echo "-----> Vendoring stunnel into slug"
 mkdir -p $STUNNEL_DIR
 tar xzf $STUNNEL_TGZ -C $STUNNEL_DIR
+
+cat > $STUNNEL_DIR/bin/stunnel_genconf <<EOF
+#!/usr/bin/env ruby
+
+servers = (ENV["MEMCACHIER_SERVERS"] || "").split(",").map! do |line|
+  "#{line.split(":").first}:11219"
+end
+
+File.open("/tmp/memcachier-stunnel.conf", "w+") do |f|
+  f.write("client = yes\n")
+  f.write("verify = 2\n")
+  f.write("\n[memcachier]\n")
+  servers.each do |server|
+    f.write("connect = #{server}\n")
+  end
+  f.write("accept = localhost:11211\n")
+  f.write("CAfile = #{ENV["HOME"]}/vendor/stunnel/etc/ssl/certs/MemCachierRootCA.pem\n")
+end
+
+puts "/tmp/memcachier-stunnel.conf"
+EOF
+
+chmod +x $STUNNEL_DIR/bin/stunnel_genconf
+
+echo "-----> Fetching MemCachier Root CA"
+mkdir -p $STUNNEL_DIR/etc/ssl/certs/
+curl $MEMCACHIER_ROOT_CA -s -o $STUNNEL_DIR/etc/ssl/certs/MemCachierRootCA.pem
+
+mkdir -p $BUILD_DIR/.profile.d
+echo "export PATH=\"\$HOME/vendor/stunnel/bin:\$PATH\"" > $BUILD_DIR/.profile.d/stunnel.sh
+echo "stunnel_genconf" >> $BUILD_DIR/.profile.d/stunnel.sh
+echo "stunnel /tmp/memcachier-stunnel.conf" >> $BUILD_DIR/.profile.d/stunnel.sh
 
 echo "-----> stunnel done"
 
