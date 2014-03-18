@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+# compile <build_dir> <cache_dir>
+
+set -e
+
+STUNNEL_URL="https://s3.amazonaws.com/memcachier-files/stunnel-5.tgz"
+STUNNEL_SHA256="af637060bfe7ff82d423b7b2a1e8583094fb4d2d312036f58df1565df93a9c46  stunnel-5.tgz"
+STUNNEL_DIR=$BUILD_DIR/vendor/stunnel
+STUNNEL_TGZ=$CACHE_DIR/stunnel-5.tgz
+
+if [ ! -f $STUNNEL_TGZ ]; then
+  echo "-----> Fetching stunnel"
+  curl $STUNNEL_URL -s -o $CACHE_DIR/stunnel-5.tgz
+done
+
+echo "-----> Verifying stunnel package sha256"
+echo $STUNNEL_SHA256 > $CACHE_DIR/stunnel-5.tgz.sha256sum
+sha256sum -c $CACHE_DIR/stunnel-5.tgz.sha256sum
+
+echo "-----> Vendoring stunnel into slug"
+mkdir -p $STUNNEL_DIR
+tar xzf $STUNNEL_TGZ -C $STUNNEL_DIR
+
+echo "-----> stunnel done"
+
