@@ -1,7 +1,7 @@
 # MemCachier TLS Buildpack
 
 A [buildpack] for connecting to MemCachier over TLS from non-TLS supporting
-clients. The builpack installs and sets up [stunnel] on localhost listening
+clients. The buildpack installs and sets up [stunnel] on localhost listening
 on port 11211. It configures stunnel to connect to the MemCachier servers
 specified in your environment variable and to verify certificates as signed by
 the [MemCachier Root CA](https://www.memcachier.com/MemCachierRootCA.pem).
@@ -36,9 +36,9 @@ We are happy to receive bug reports, fixes, documentation enhancements,
 and other improvements.
 
 Please report bugs via the
-[github issue tracker](http://github.com/memcachier/memcachier-tls-buildpack/issues).
+[github issue tracker](https://github.com/memcachier/memcachier-tls-buildpack/issues).
 
-Master [git repository](http://github.com/memcachier/memcachier-tls-buildpack):
+Master [git repository](https://github.com/memcachier/memcachier-tls-buildpack):
 
 * `git clone git://github.com/memcachier/memcachier-tls-buildpack.git`
 
