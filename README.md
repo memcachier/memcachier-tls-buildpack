@@ -10,7 +10,7 @@ the [MemCachier Root CA](https://www.memcachier.com/MemCachierRootCA.pem).
 
 Heroku now has native support for [multiple buildpacks], so simply run:
 
-    $ heroku buildpacks:add https://github.com/memcachier/memcachier-tls-buildpack.git
+    $ heroku buildpacks:add -i 1 https://github.com/memcachier/memcachier-tls-buildpack.git
 
 Finally, configure your app to connect to `localhost:11211` instead of using
 the `MEMCACHIER_SERVERS` environment variable and deploy!
