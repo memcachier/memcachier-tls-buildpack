@@ -8,31 +8,26 @@ BUILD_DIR=$1
 CACHE_DIR=$2
 
 MEMCACHIER_ROOT_CA=https://www.memcachier.com/MemCachierRootCA.pem
-
-if [ "$STACK" == "cedar" ]
-then
-  STUNNEL_URL="https://s3.amazonaws.com/memcachier-files/stunnel-5.tgz"
-elif [ "$STACK" == "cedar-14" ]
-then
-  STUNNEL_URL="https://s3.amazonaws.com/memcachier-files/stunnel-cedar-14.tgz"
-else
-  echo "----> Unsupported stack \"$STACK\""
-  exit 1
-fi
-
 STUNNEL_DIR=$BUILD_DIR/vendor/stunnel
-STUNNEL_TGZ=$CACHE_DIR/stunnel.tgz
 
-mkdir -p $CACHE_DIR
+# Cedar-14's pre-installed stunnel is very old, so we vendor a newer version.
+if [[ "$STACK" == "cedar-14" ]]; then
+  STUNNEL_URL="https://s3.amazonaws.com/memcachier-files/stunnel-cedar-14.tgz"
+  STUNNEL_TGZ=$CACHE_DIR/stunnel.tgz
 
-if [ ! -f $STUNNEL_TGZ ]; then
-  echo "-----> Fetching stunnel"
-  curl $STUNNEL_URL -s -o $STUNNEL_TGZ
+  mkdir -p $CACHE_DIR
+
+  if [ ! -f $STUNNEL_TGZ ]; then
+    echo "-----> Fetching stunnel"
+    curl $STUNNEL_URL -s -o $STUNNEL_TGZ
+  fi
+
+  echo "-----> Vendoring stunnel into slug"
+  mkdir -p $STUNNEL_DIR
+  tar xzf $STUNNEL_TGZ -C $STUNNEL_DIR
 fi
 
-echo "-----> Vendoring stunnel into slug"
-mkdir -p $STUNNEL_DIR
-tar xzf $STUNNEL_TGZ -C $STUNNEL_DIR
+mkdir -p $STUNNEL_DIR/bin
 
 cat > $STUNNEL_DIR/bin/stunnel_genconf <<EOF
 #!/usr/bin/env ruby
@@ -42,6 +37,7 @@ servers = (ENV["MEMCACHIER_SERVERS"] || "").split(",").map! do |line|
 end
 
 File.open("/tmp/memcachier-stunnel.conf", "w+") do |f|
+  f.write("pid = #{ENV["HOME"]}/vendor/stunnel/stunnel4.pid\n")
   f.write("client = yes\n")
   f.write("verify = 2\n")
   f.write("\n[memcachier]\n")
@@ -67,4 +63,3 @@ echo "stunnel_genconf" >> $BUILD_DIR/.profile.d/stunnel.sh
 echo "stunnel /tmp/memcachier-stunnel.conf" >> $BUILD_DIR/.profile.d/stunnel.sh
 
 echo "-----> stunnel done"
-
