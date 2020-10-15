@@ -36,7 +36,7 @@ servers = (ENV["MEMCACHIER_SERVERS"] || "").split(",").map! do |line|
   "#{line.split(":").first}:11219"
 end
 
-File.open("/tmp/memcachier-stunnel.conf", "w+") do |f|
+File.open("/tmp/memcachier-stunnel.conf", "w") do |f|
   f.write("pid = #{ENV["HOME"]}/vendor/stunnel/stunnel4.pid\n")
   f.write("client = yes\n")
   f.write("verify = 2\n")
