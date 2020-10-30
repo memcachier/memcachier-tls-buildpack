@@ -44,7 +44,7 @@ File.open("/tmp/memcachier-stunnel.conf", "w+") do |f|
   servers.each do |server|
     f.write("connect = #{server}\n")
   end
-  f.write("accept = localhost:11211\n")
+  f.write("accept = 127.0.0.1:11211\n")
   f.write("CAfile = #{ENV["HOME"]}/vendor/stunnel/etc/ssl/certs/MemCachierRootCA.pem\n")
 end
 

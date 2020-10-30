@@ -12,7 +12,7 @@ Heroku now has native support for [multiple buildpacks], so simply run:
 
     $ heroku buildpacks:add -i 1 memcachier/memcachier-tls
 
-Finally, configure your app to connect to `localhost:11211` instead of using
+Finally, configure your app to connect to `127.0.0.1:11211` instead of using
 the `MEMCACHIER_SERVERS` environment variable and deploy!
 
 ## Using the latest source code
